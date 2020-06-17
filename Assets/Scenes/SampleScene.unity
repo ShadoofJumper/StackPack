@@ -151,10 +151,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e33f69ac43175754bbded4fe74e03a96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  blockLoopDelta: 1
-  blockStartOffset: 1.42
+  blockLoopDelta: 1.33
+  blockStartOffset: 1.85
   levelHeight: 0.2
-  blocksSpeed: 0.5
+  blocksSpeed: 2
   hitAccuracy: 0.1
 --- !u!4 &32701588
 Transform:

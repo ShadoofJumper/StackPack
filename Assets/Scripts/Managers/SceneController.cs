@@ -12,10 +12,11 @@ public class SceneController : MonoBehaviour
     [SerializeField] private float  blocksSpeed;
     [SerializeField] private float  hitAccuracy;
     // in game logic var
-    private int         currentLevel;
-    private Vector3     currentLevelCenter;
-    private Vector3     lastBlockSize;
-    private BlockInfo   currentBlock;
+    private int                 currentLevel;
+    private Vector3             currentLevelCenter;
+    private BlockTransformInfo  lastBlockInfo;
+    private BlockInfo           currentBlock;
+
     private readonly Vector3[] moveDirections = new Vector3[]
 {
         Vector3.forward,
@@ -34,26 +35,44 @@ public class SceneController : MonoBehaviour
 
     private void Start()
     {
-        currentLevel = 1;
+        StartNewStage();
+    }
+
+    // ------------------ Stage logic ------------------------
+
+    private void StartNewStage()
+    {
+        currentLevel += 1;
         SpawnNewLevelBlock();
     }
 
-    // ------------------ Drop block logic -------------------
 
+    // ------------------ Drop block logic -------------------
     public void DropBlock()
     {
-        //stop move
         currentBlock.mover.StopMove();
-        //get offset
-        Vector3 offset = GetDropOffset(currentBlock.gameObject);
+        Vector3 offset          = GetDropOffset(currentBlock.gameObject);
+        bool isHorizontal       = offset.z == 0.0f ? true : false;
+        float offsetAlonAxis    = isHorizontal ? offset.x : offset.z;
+
         if (offset.magnitude <= hitAccuracy)
         {
-            CompleteStage();
+            PrefectStage();
+        }
+        else if (CheckFailDrop(offsetAlonAxis, isHorizontal))
+        {
+            FailDrop();
         }
         else
         {
-            blockCrafter.SplitBlock(currentBlock.gameObject, offset.x);
+            SliceBlock(offsetAlonAxis, isHorizontal);
         }
+    }
+
+    private bool CheckFailDrop(float offsetAlonAxis, bool isHorizontal)
+    {
+        float blockSliceSide = isHorizontal ? currentBlock.block.SideA : currentBlock.block.SideB;
+        return Mathf.Abs(offsetAlonAxis) > blockSliceSide;
     }
 
     private Vector3 GetDropOffset(GameObject blockObject)
@@ -61,19 +80,38 @@ public class SceneController : MonoBehaviour
         return blockObject.transform.position - currentLevelCenter;
     }
 
-    private void CompleteStage()
+    private void SliceBlock(float offsetAlongAxis, bool isHorizontal)
+    {
+        GameObject[] gameObjects = blockCrafter.SplitBlock(currentBlock.gameObject, offsetAlongAxis, isHorizontal);
+        //enable rigidbody to not stable part
+        gameObjects[0].GetComponent<Rigidbody>().isKinematic = false;
+        //save last block size
+        lastBlockInfo = new BlockTransformInfo(gameObjects[1].transform.localScale, gameObjects[1].transform.position);
+        StartNewStage();
+    }
+
+    private void PrefectStage()
     {
         Debug.Log("Prefect!");
         //move block to center
         currentBlock.gameObject.transform.position = currentLevelCenter;
+        StartNewStage();
+    }
+
+    private void FailDrop()
+    {
+        Debug.Log("Fail!!");
+        currentBlock.gameObject.GetComponent<Rigidbody>().isKinematic = false;
     }
 
     // ---------------- Blocks creating logic ----------------
     private void SpawnNewLevelBlock()
     {
-        Vector3 randomSide  = moveDirections[1];//Random.Range(0, moveDirections.Length)
+        Vector3 randomSide  = moveDirections[Random.Range(0, moveDirections.Length)];
+        //set center
+        currentLevelCenter = lastBlockInfo.position;
         //increas level height
-        currentLevelCenter  = Vector3.up * levelHeight;
+        currentLevelCenter += Vector3.up * levelHeight;
         //create block
         BlockMover mover    = CreateMovingBlock(randomSide);
         mover.StartMove();
@@ -82,19 +120,25 @@ public class SceneController : MonoBehaviour
     private BlockMover CreateMovingBlock(Vector3 moveDirection)
     {
         //create block
-        Vector3 newSize             = lastBlockSize != Vector3.zero ? lastBlockSize 
+        Vector3 newSize             = lastBlockInfo.scale != Vector3.zero ? lastBlockInfo.scale
             : new Vector3(1.0f, levelHeight, 1.0f);
-        Color newColor              = Color.blue;
+        Color newColor              = GetRandomBlockColor();
         GameObject newBlock         = blockCrafter.CreateBlock(newSize, newColor);
         newBlock.name = "Block_" + currentLevel;
         //place on start
         newBlock.transform.position = currentLevelCenter + moveDirection * blockStartOffset;
         //add moving component to block
         BlockMover mover            = newBlock.AddComponent<BlockMover>();
-        mover.Construct(moveDirection, blockLoopDelta, blocksSpeed);
+        mover.Construct(moveDirection, blockLoopDelta, blocksSpeed, currentLevelCenter);//
         // save info
         currentBlock                = new BlockInfo(newBlock, mover, moveDirection);
         return mover;
+    }
+
+    //stub
+    private Color GetRandomBlockColor()
+    {
+        return new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
     }
     // --------------------------------------------------------
 
@@ -125,11 +169,28 @@ public class SceneController : MonoBehaviour
         public GameObject   gameObject;
         public BlockMover   mover;
         public Vector3      moveDirection;
+        public Block        block;
+
         public BlockInfo(GameObject _gameObject, BlockMover _blockMover, Vector3 _moveDirection)
         {
             gameObject      = _gameObject;
             mover           = _blockMover;
             moveDirection   = _moveDirection;
+            block           = _gameObject.GetComponent<Block>();
+        }
+
+    }
+
+    //struct to save info about last block transform
+    public struct BlockTransformInfo
+    {
+        public Vector3 scale;
+        public Vector3 position;
+
+        public BlockTransformInfo(Vector3 _scale, Vector3 _position)
+        {
+            scale       = _scale;
+            position    = _position;
         }
 
     }

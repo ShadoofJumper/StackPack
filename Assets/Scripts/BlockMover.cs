@@ -13,17 +13,18 @@ public class BlockMover : MonoBehaviour
     private Vector3 currentPos;
     private float   startLoopTime;
 
-    public void Construct(Vector3 moveDirection, float movingDelta, float speed)
+    public void Construct(Vector3 moveDirection, float movingDelta, float speed, Vector3 center)
     {
         this.moveDirection  = moveDirection;
         this.movingDelta    = movingDelta;
         this.speed          = speed;
+        this.center         = center;
     }
 
     public void StartMove()
     {
         //set block center
-        center = Vector3.up * transform.position.y;
+        //center = Vector3.up * transform.position.y;
         //move to center
         Vector3 loopPointStart = center;
         StartCoroutine(MoveToCenter());
