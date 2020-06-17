@@ -5,31 +5,66 @@ using Zenject;
 
 public class Block : MonoBehaviour
 {
-    private float   sideA;
-    private float   sideB;
-    private float   height;
-    private Color   blockColor;
+    private float sideA;
+    private float sideB;
+    private float height;
+    private Color color;
     private Material blockMaterial;
+
+    #region Properties
+    public float SideA {
+        get { return sideA; }
+        set {
+            sideA = value;
+            UpdateBlockView();
+        }
+    }
+    public float SideB
+    {
+        get { return sideB; }
+        set
+        {
+            sideB = value;
+            UpdateBlockView();
+        }
+    }
+    public float Height
+    {
+        get { return height; }
+        set
+        {
+            height = value;
+            UpdateBlockView();
+        }
+    }
+    public Color Color
+    {
+        get { return color; }
+        set
+        {
+            color = value;
+            UpdateBlockView();
+        }
+    }
+    #endregion
 
     private void Awake()
     {
         blockMaterial = GetComponent<MeshRenderer>().material;
     }
 
-    public void Input(float sideA, float sideB, float height, Color blockColor)
+    public void CustomizeBlock(float sideA, float sideB, float height, Color blockColor)
     {
-        Debug.Log("Input");
-        this.sideA      = sideA;
-        this.sideB      = sideB;
-        this.blockColor = blockColor;
-        this.height     = height;
-
-        CustomizeBlock();
+        this.sideA  = sideA;
+        this.sideB  = sideB;
+        this.color  = blockColor;
+        this.height = height;
+        UpdateBlockView();
     }
 
-    private void CustomizeBlock()
+    private void UpdateBlockView()
     {
         transform.localScale = new Vector3(sideA, height, sideB);
-        blockMaterial.color  = blockColor;
+        blockMaterial.color  = color;
     }
 }
