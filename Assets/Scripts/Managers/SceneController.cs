@@ -12,40 +12,39 @@ public class SceneController : MonoBehaviour
     [SerializeField] private float  blocksSpeed;
     [SerializeField] private float  hitAccuracy;
     // in game logic var
-    private int                 currentLevel;
+    private int                 lastBlockDirectionId;
+    private int                 blockCount;
     private Vector3             currentLevelCenter;
-    private BlockTransformInfo  lastBlockInfo;
+    private BlockTransformInfo  lastBlockTransform;
     private BlockInfo           currentBlock;
-
-    private readonly Vector3[] moveDirections = new Vector3[]
-{
+    private readonly Vector3[]  moveDirections = new Vector3[]
+    {
         Vector3.forward,
         Vector3.right,
         Vector3.left,
         Vector3.back,
     };
+
     // dependency
-    private BlockCrafter blockCrafter;
+    private BlockCrafter    blockCrafter;
+    private GameManager     gameManager;
+    private ColorManager    colorManager;
+
+    public Vector3 CurrentLevelCenter => currentLevelCenter;
 
     [Inject]
-    private void Construct(BlockCrafter blockCrafter)
+    private void Construct(BlockCrafter blockCrafter, GameManager gameManager, GameConfig gameConfig, ColorManager colorManager)
     {
-        this.blockCrafter = blockCrafter;
+        this.blockCrafter   = blockCrafter;
+        this.gameManager    = gameManager;
+        this.colorManager   = colorManager;
+
+        blockLoopDelta      = gameConfig.BlockLoopDelta;
+        blockStartOffset    = gameConfig.BlockStartOffset;
+        levelHeight         = gameConfig.LevelHeight;
+        blocksSpeed         = gameConfig.BlocksSpeed;
+        hitAccuracy         = gameConfig.HitAccuracy;
     }
-
-    private void Start()
-    {
-        StartNewStage();
-    }
-
-    // ------------------ Stage logic ------------------------
-
-    private void StartNewStage()
-    {
-        currentLevel += 1;
-        SpawnNewLevelBlock();
-    }
-
 
     // ------------------ Drop block logic -------------------
     public void DropBlock()
@@ -82,12 +81,11 @@ public class SceneController : MonoBehaviour
 
     private void SliceBlock(float offsetAlongAxis, bool isHorizontal)
     {
-        GameObject[] gameObjects = blockCrafter.SplitBlock(currentBlock.gameObject, offsetAlongAxis, isHorizontal);
+        GameObject[] gameObjects = blockCrafter.SplitBlock(currentBlock.gameObject, offsetAlongAxis, isHorizontal, currentLevelCenter);
         //enable rigidbody to not stable part
         gameObjects[0].GetComponent<Rigidbody>().isKinematic = false;
-        //save last block size
-        lastBlockInfo = new BlockTransformInfo(gameObjects[1].transform.localScale, gameObjects[1].transform.position);
-        StartNewStage();
+        SaveLastBlockTransform(gameObjects[1].transform);
+        gameManager.NextStage();
     }
 
     private void PrefectStage()
@@ -95,23 +93,41 @@ public class SceneController : MonoBehaviour
         Debug.Log("Prefect!");
         //move block to center
         currentBlock.gameObject.transform.position = currentLevelCenter;
-        StartNewStage();
+        SaveLastBlockTransform(currentBlock.gameObject.transform);
+        gameManager.NextStage();
     }
 
     private void FailDrop()
     {
-        Debug.Log("Fail!!");
         currentBlock.gameObject.GetComponent<Rigidbody>().isKinematic = false;
+        gameManager.FailGame();
+    }
+
+    private void SaveLastBlockTransform(Transform blockObject)
+    {
+        //save last block size and position
+        lastBlockTransform = new BlockTransformInfo(blockObject.transform.localScale, blockObject.transform.position);
     }
 
     // ---------------- Blocks creating logic ----------------
-    private void SpawnNewLevelBlock()
+    public void SpawnBaseBlock()
     {
-        Vector3 randomSide  = moveDirections[Random.Range(0, moveDirections.Length)];
+        Vector3 baseBlockSize   = Vector3.one;
+        baseBlockSize.y         = levelHeight * 2;
+        Color newColor          = colorManager.GetColorFromGradient();
+        GameObject baseBlock    = blockCrafter.CreateBlock(baseBlockSize, newColor);
+        baseBlock.name          = "BlockBase";
+        //place on start
+        baseBlock.transform.position = Vector3.zero - Vector3.up * (baseBlockSize.y/2 - levelHeight/2);
+    }
+
+    public void SpawnNewLevelBlock()
+    {
+        Vector3 randomSide  = GetRandomMoveDirection();
         //set center
-        currentLevelCenter = lastBlockInfo.position;
+        currentLevelCenter  = lastBlockTransform.position;
         //increas level height
-        currentLevelCenter += Vector3.up * levelHeight;
+        currentLevelCenter  += Vector3.up * levelHeight;
         //create block
         BlockMover mover    = CreateMovingBlock(randomSide);
         mover.StartMove();
@@ -120,11 +136,11 @@ public class SceneController : MonoBehaviour
     private BlockMover CreateMovingBlock(Vector3 moveDirection)
     {
         //create block
-        Vector3 newSize             = lastBlockInfo.scale != Vector3.zero ? lastBlockInfo.scale
+        Vector3 newSize             = lastBlockTransform.scale != Vector3.zero ? lastBlockTransform.scale
             : new Vector3(1.0f, levelHeight, 1.0f);
-        Color newColor              = GetRandomBlockColor();
+        Color newColor              = colorManager.GetColorFromGradient();
         GameObject newBlock         = blockCrafter.CreateBlock(newSize, newColor);
-        newBlock.name = "Block_" + currentLevel;
+        newBlock.name               = "Block_" + blockCount;
         //place on start
         newBlock.transform.position = currentLevelCenter + moveDirection * blockStartOffset;
         //add moving component to block
@@ -132,13 +148,20 @@ public class SceneController : MonoBehaviour
         mover.Construct(moveDirection, blockLoopDelta, blocksSpeed, currentLevelCenter);//
         // save info
         currentBlock                = new BlockInfo(newBlock, mover, moveDirection);
+        blockCount++;
         return mover;
     }
 
-    //stub
-    private Color GetRandomBlockColor()
+    private Vector3 GetRandomMoveDirection()
     {
-        return new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
+        int blockDirectionId = Random.Range(0, moveDirections.Length);
+        if (blockDirectionId == lastBlockDirectionId)
+        {
+            blockDirectionId++;
+            blockDirectionId = blockDirectionId % moveDirections.Length;
+        }
+        lastBlockDirectionId = blockDirectionId;
+        return moveDirections[blockDirectionId];
     }
     // --------------------------------------------------------
 

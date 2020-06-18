@@ -23,8 +23,6 @@ public class BlockMover : MonoBehaviour
 
     public void StartMove()
     {
-        //set block center
-        //center = Vector3.up * transform.position.y;
         //move to center
         Vector3 loopPointStart = center;
         StartCoroutine(MoveToCenter());

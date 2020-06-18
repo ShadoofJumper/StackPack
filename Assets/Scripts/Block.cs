@@ -67,4 +67,17 @@ public class Block : MonoBehaviour
         transform.localScale = new Vector3(sideA, height, sideB);
         blockMaterial.color  = color;
     }
+
+    private void Update()
+    {
+        if (transform.position.y < -3.0f)
+        {
+            DestroBlock();
+        }
+    }
+
+    private void DestroBlock()
+    {
+        Destroy(gameObject);
+    }
 }
