@@ -17,9 +17,14 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetMouseButtonDown(0) && gameManager.IsGameInProgress)
+        if (gameManager.IsGameInProgress)
         {
-            sceneController.DropBlock();
+            if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began 
+                || Input.GetMouseButtonDown(0))
+            {
+                sceneController.DropBlock();
+            }
         }
+        
     }
 }

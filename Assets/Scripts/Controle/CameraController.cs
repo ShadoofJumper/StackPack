@@ -32,12 +32,11 @@ public class CameraController : MonoBehaviour
     {
         cameraOffset    = transform.position;
         cameraComponent = GetComponent<Camera>();
-        Debug.Log("cameraOffset: " + cameraOffset);
     }
 
     public void MoveCameraAway(UnityAction callback = null)
     {
-        Vector3 moveToPosition  = transform.position + Vector3.up * moveAwayOffset;
+        Vector3 moveToPosition  = transform.position + Vector3.up * (moveAwayOffset + gameManager.CurrentLevel * levelHeight);
         gameEndCameraPosition = moveToPosition;
         transform.DOMove(moveToPosition, moveAwaySpeed, false).OnComplete(() => callback.Invoke());
     }
@@ -45,7 +44,6 @@ public class CameraController : MonoBehaviour
     public void MoveCameraToStart(UnityAction callback = null)
     {
         transform.position = gameEndCameraPosition;
-        Debug.Log("back start: "+ cameraOffset);
         transform.DOMove(cameraOffset, moveAwaySpeed, false).OnComplete(() => callback.Invoke()); ;
     }
 

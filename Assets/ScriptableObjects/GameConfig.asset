@@ -16,4 +16,4 @@ MonoBehaviour:
   blockStartOffset: 2.5
   levelHeight: 0.2
   blocksSpeed: 2.5
-  hitAccuracy: 0.02
+  hitAccuracy: 0.01

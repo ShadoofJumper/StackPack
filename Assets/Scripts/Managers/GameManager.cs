@@ -10,7 +10,7 @@ public class GameManager : MonoBehaviour
     private CameraController    cameraController;
     private ScoreManager        scoreManager;
     private UIController        uIController;
-    private static  bool        isStartFirstTime = true;
+    private static  bool        isStartFirstTime    = true;
     private int     currentLevel;
     private bool    isGameInProgress;
 
@@ -35,7 +35,10 @@ public class GameManager : MonoBehaviour
     private void MoveCameraToStart()
     {
         if (!isStartFirstTime)
+        {
+            uIController.ShowMenuPanel(true);
             cameraController.MoveCameraToStart();
+        } 
         isStartFirstTime = false;
     }
 
@@ -51,8 +54,8 @@ public class GameManager : MonoBehaviour
     {
         isGameInProgress = true;
         sceneController.SpawnNewLevelBlock();
-        uIController.HideMenuPanel();
-        uIController.ShowInGamePanel();
+        uIController.HideMenuPanel(true);
+        uIController.ShowInGamePanel(true);
         uIController.UpdateCurrentScore();
     }
 
@@ -60,12 +63,14 @@ public class GameManager : MonoBehaviour
     {
         isGameInProgress = false;
         cameraController.LookPerspective();
-        uIController.ShowRestartPanel();
+        uIController.ShowRestartPanel(true);
         scoreManager.SaveNewRecord();
     }
 
     public void RestartGame()
     {
+        uIController.HideCurrentScore(true);
+        uIController.HideRestartPanel(true);
         cameraController.MoveCameraAway(delegate {
             SceneManager.LoadScene("Game");
         });
@@ -77,6 +82,8 @@ public class GameManager : MonoBehaviour
         cameraController.MoveLevelUp();
         scoreManager.AddScorePoint();
         sceneController.SpawnNewLevelBlock();
+        //add light vibration
+        Handheld.Vibrate();
     }
     // ----------------------------------------------
 

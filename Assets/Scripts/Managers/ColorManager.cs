@@ -11,6 +11,7 @@ public class ColorManager : MonoBehaviour
     private GradientColorKey[]  blockColorKeys;
     private GradientAlphaKey[]  blockAlphaKeys;
     private int                 currentIdInGradiant;
+    private int                 gradientQuality = 5;
 
     private void Awake()
     {
@@ -36,9 +37,9 @@ public class ColorManager : MonoBehaviour
     {
         currentIdInGradiant++;
         //get color
-        Color colorFromGradient = blocksGradient.Evaluate(currentIdInGradiant * 0.1f);
+        Color colorFromGradient = blocksGradient.Evaluate(currentIdInGradiant/ (float)gradientQuality);
         //update gradient colors if on end
-        if (currentIdInGradiant == 10)
+        if (currentIdInGradiant == gradientQuality)
         {
             UpdateBlocksGradientColors(colorFromGradient, GetRandomColorFor(colorFromGradient));
             currentIdInGradiant = 0;
@@ -63,7 +64,7 @@ public class ColorManager : MonoBehaviour
 
     private void UpdateBgGradientColors(Color toColor)
     {
-        Camera.main.DOColor(GetOppositColor(toColor), 0.5f);
+        Camera.main.DOColor(toColor, 1.5f);
     }
 
     /// get random color for set color, using this for keep same color style
@@ -79,13 +80,5 @@ public class ColorManager : MonoBehaviour
         return Color.HSVToRGB(H, S, V);
     }
 
-    private Color GetOppositColor(Color color)
-    {
-        //convert to hsv
-        float H, S, V;
-        Color.RGBToHSV(color, out H, out S, out V);
-        //get hsv opposit color
-        H = (H + 0.5f) % 1.0f;
-        return Color.HSVToRGB(H, S, V);
-    }
+
 }
