@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Zenject;
 
 public class GameManager : MonoBehaviour
@@ -8,47 +9,75 @@ public class GameManager : MonoBehaviour
     private SceneController     sceneController;
     private CameraController    cameraController;
     private ScoreManager        scoreManager;
-    private int currentLevel;
-    private bool isGameInProgress;
+    private UIController        uIController;
+    private static  bool        isStartFirstTime = true;
+    private int     currentLevel;
+    private bool    isGameInProgress;
 
     public int CurrentLevel         => currentLevel;
     public bool IsGameInProgress    => isGameInProgress;
 
     [Inject]
-    private void Construct(SceneController sceneController, CameraController cameraController, ScoreManager scoreManager)
+    private void Construct(SceneController sceneController, CameraController cameraController, ScoreManager scoreManager, UIController uIController)
     {
         this.sceneController    = sceneController;
         this.cameraController   = cameraController;
         this.scoreManager       = scoreManager;
+        this.uIController       = uIController;
     }
 
     private void Start()
     {
-        StartGame();
+        MoveCameraToStart();
+        SetupStartView();
     }
 
-    private void StartGame()
+    private void MoveCameraToStart()
+    {
+        if (!isStartFirstTime)
+            cameraController.MoveCameraToStart();
+        isStartFirstTime = false;
+    }
+
+    private void SetupStartView()
+    {
+        sceneController.SpawnBaseBlock();
+        uIController.UpdateBestScore(PlayerPrefs.GetInt("Record", 0));
+    }
+
+
+    // ------------ game progress loggic ------------
+    public void StartGame()
     {
         isGameInProgress = true;
-        sceneController.SpawnBaseBlock();
         sceneController.SpawnNewLevelBlock();
+        uIController.HideMenuPanel();
+        uIController.ShowInGamePanel();
+        uIController.UpdateCurrentScore();
     }
 
     public void FailGame()
     {
         isGameInProgress = false;
         cameraController.LookPerspective();
+        uIController.ShowRestartPanel();
+        scoreManager.SaveNewRecord();
+    }
+
+    public void RestartGame()
+    {
+        cameraController.MoveCameraAway(delegate {
+            SceneManager.LoadScene("Game");
+        });
     }
 
     public void NextStage()
     {
         currentLevel++;
-        //move camera
         cameraController.MoveLevelUp();
-        //add point to score
         scoreManager.AddScorePoint();
-        //spawn next stage block
         sceneController.SpawnNewLevelBlock();
     }
+    // ----------------------------------------------
 
 }

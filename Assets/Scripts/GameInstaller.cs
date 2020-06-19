@@ -12,6 +12,7 @@ public class GameInstaller : MonoInstaller
     [SerializeField] ScoreManager       scoreManager;
     [SerializeField] GameConfig         gameConfig;
     [SerializeField] ColorManager       colorManager;
+    [SerializeField] UIController       uIController;
 
     public override void InstallBindings()
     {
@@ -22,6 +23,7 @@ public class GameInstaller : MonoInstaller
         Container.BindInstance(scoreManager).AsSingle();
         Container.BindInstance(gameConfig).AsSingle();
         Container.BindInstance(colorManager).AsSingle();
+        Container.BindInstance(uIController).AsSingle();
     }
 
 }

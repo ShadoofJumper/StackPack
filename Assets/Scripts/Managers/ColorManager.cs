@@ -1,29 +1,25 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using DG.Tweening;
 
 public class ColorManager : MonoBehaviour
 {
-    [SerializeField] private Color standartColor;
+    [SerializeField] private Color      standartColor;
     private Gradient            blocksGradient;
     private GradientColorKey[]  blockColorKeys;
     private GradientAlphaKey[]  blockAlphaKeys;
     private int                 currentIdInGradiant;
 
-    //test
-    public GameObject sphere1;
-    public GameObject sphere2;
-    public GameObject sphere3;
-    public GameObject sphere4;
-
     private void Awake()
     {
         SetupFirstBlocksGradient();
+    }
 
-        sphere1.GetComponent<MeshRenderer>().material.color = blocksGradient.Evaluate(0.0f);
-        sphere2.GetComponent<MeshRenderer>().material.color = blocksGradient.Evaluate(0.3f);
-        sphere3.GetComponent<MeshRenderer>().material.color = blocksGradient.Evaluate(0.7f);
-        sphere4.GetComponent<MeshRenderer>().material.color = blocksGradient.Evaluate(1.0f);
+    private void Start()
+    {
+        UpdateBgGradientColors(blocksGradient.Evaluate(0.0f));
     }
 
     private void SetupFirstBlocksGradient()
@@ -44,14 +40,11 @@ public class ColorManager : MonoBehaviour
         //update gradient colors if on end
         if (currentIdInGradiant == 10)
         {
-            Debug.Log("here!!!!!!!!!!!!");
             UpdateBlocksGradientColors(colorFromGradient, GetRandomColorFor(colorFromGradient));
-            sphere1.GetComponent<MeshRenderer>().material.color = blocksGradient.Evaluate(0.0f);
-            sphere2.GetComponent<MeshRenderer>().material.color = blocksGradient.Evaluate(0.3f);
-            sphere3.GetComponent<MeshRenderer>().material.color = blocksGradient.Evaluate(0.7f);
-            sphere4.GetComponent<MeshRenderer>().material.color = blocksGradient.Evaluate(1.0f);
             currentIdInGradiant = 0;
         }
+        UpdateBgGradientColors(colorFromGradient);
+
         return colorFromGradient;
     }
 
@@ -68,15 +61,19 @@ public class ColorManager : MonoBehaviour
         return blocksGradient;
     }
 
+    private void UpdateBgGradientColors(Color toColor)
+    {
+        Camera.main.DOColor(GetOppositColor(toColor), 0.5f);
+    }
+
     /// get random color for set color, using this for keep same color style
-    /// and color cant repeat
     private Color GetRandomColorFor(Color colorFrom)
     {
         //convert to hsv
         float H, S, V;
         Color.RGBToHSV(colorFrom, out H, out S, out V);
         //add to hue random step
-        H += Random.Range(90, 150) / 360.0f;
+        H += Random.Range(20, 340) / 360.0f;
         H = H % 1.0f;
         S = Random.Range(0.6f, 1.0f);
         return Color.HSVToRGB(H, S, V);

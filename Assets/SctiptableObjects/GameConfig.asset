@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1098cee1e4650724a8ee52ea16d2ae9a, type: 3}
   m_Name: GameConfig
   m_EditorClassIdentifier: 
-  blockLoopDelta: 1
-  blockStartOffset: 1.5
+  blockLoopDelta: 1.4
+  blockStartOffset: 2.5
   levelHeight: 0.2
-  blocksSpeed: 2
-  hitAccuracy: 0.05
+  blocksSpeed: 2.5
+  hitAccuracy: 0.02

@@ -17,6 +17,7 @@ public class SceneController : MonoBehaviour
     private Vector3             currentLevelCenter;
     private BlockTransformInfo  lastBlockTransform;
     private BlockInfo           currentBlock;
+    private List<Block>         blocksInGame;
     private readonly Vector3[]  moveDirections = new Vector3[]
     {
         Vector3.forward,
@@ -90,7 +91,6 @@ public class SceneController : MonoBehaviour
 
     private void PrefectStage()
     {
-        Debug.Log("Prefect!");
         //move block to center
         currentBlock.gameObject.transform.position = currentLevelCenter;
         SaveLastBlockTransform(currentBlock.gameObject.transform);
@@ -162,6 +162,11 @@ public class SceneController : MonoBehaviour
         }
         lastBlockDirectionId = blockDirectionId;
         return moveDirections[blockDirectionId];
+    }
+
+    public void RemoveOldBloks()
+    {
+
     }
     // --------------------------------------------------------
 
