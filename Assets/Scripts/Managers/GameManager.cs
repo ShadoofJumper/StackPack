@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Zenject;
 
+
 public class GameManager : MonoBehaviour
 {
     private SceneController     sceneController;
@@ -82,8 +83,6 @@ public class GameManager : MonoBehaviour
         cameraController.MoveLevelUp();
         scoreManager.AddScorePoint();
         sceneController.SpawnNewLevelBlock();
-        //add light vibration
-        Handheld.Vibrate();
     }
     // ----------------------------------------------
 
